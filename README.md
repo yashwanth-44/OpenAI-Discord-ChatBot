@@ -29,8 +29,8 @@ This is a multifunctional Discord bot built using `nextcord`, designed to provid
 
 1. Clone this repository:
    ```sh
-   git clone https://github.com/your-username/your-repo.git
-   cd your-repo
+   git clone https://github.com/yashwanth-44/OpenAI-Discord-ChatBot.git
+   cd OpenAI-Discord-ChatBot
    ```
    
 2. Install the required dependencies:
