@@ -58,44 +58,37 @@ async def tts(ctx, *args):
 
         await vc.disconnect()
         print("disconnected from voice channel.")
+        os.remove("tts-audio.mp3")
 
     else:
         await ctx.send("join a voice channel first.")
         
-        
+# Chat command
 @bot.command(name="c")
 async def send_message(ctx, *args):
     prompt = " ".join(args)
     user = ctx.message.author
     
-    translator = Translator()
     client = Client()
     
     spam_start = "sorry, 您的ip"
     
     def get_valid_response():
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "you are not an ai. you are a human with emotions", "content": f"lets roleplay im a person and i say {prompt} answer to me in a as a cute little kittens tone dont add any body movements or narrative dont ever use emojis"}],
+            web_search=False
+        )
         
-        while True:
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "you are not an ai. you are a human with emotions", "content": prompt}],
-                language="en"
-            )
-            
-            resp = response.choices[0].message.content
-            print(resp)
-            
-            if not resp.startswith(spam_start):
-                return resp
+        resp = response.choices[0].message.content
+        print(resp)
+    
+        return resp
     
     resp = get_valid_response()
-
-    translation = translator.translate(resp)
-    print(f"Translated Text: {translation.text}")
+    await ctx.send(resp)
     
-    await ctx.send(translation.text.replace('.', '. '))
-    
-    
+# Respond to prompt on VC
 @bot.command(name="ttv")
 async def send_message(ctx, *args):
     prompt = " ".join(args)
@@ -106,18 +99,16 @@ async def send_message(ctx, *args):
     spam_start = "sorry, 您的ip"
 
     def get_valid_response():
-        while True:
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "you are not an ai. you are a human with emotions", "content": prompt}],
-                language="en"
-            )
-            
-            resp = response.choices[0].message.content
-            print(resp)
-            
-            if not resp.startswith(spam_start):
-                return resp
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "you are not an ai. you are a human with emotions", "content": f"lets roleplay im a person and i say {prompt} answer to me in a as a cute little kittens tone dont add any body movements or narrative dont ever use emojis"}],
+            web_search=False
+        )
+        
+        resp = response.choices[0].message.content
+        print(resp)
+        
+        return resp
 
     response_text = get_valid_response()
 
@@ -145,29 +136,37 @@ async def send_message(ctx, *args):
             
         
 # 
-# IMAGE GENERATOR
+# IMAGE GENERATOR (Fixed)
 # 
+
 @bot.command("gen")
 async def send_message(ctx, *args):
     prompt = " ".join(args)
+    
     try:
-
         client = Client()
-        response = client.images.generate(
-            model="gemini",
+        loop = asyncio.get_running_loop()
+        response = await loop.run_in_executor(None, lambda: client.images.generate(
+            model="flux",
             prompt=prompt,
-        )
-        
-        if response.data:
+            response_format="url"
+        ))
+
+        if response and response.data:
             image_url = response.data[0].url
-            await ctx.send(image_url)
+
+            # Force Discord to embed the image
+            embed = nextcord.Embed(title="Generated Image", description=f"Prompt: {prompt}")
+            embed.set_image(url=image_url)
+
+            await ctx.send(embed=embed)
         else:
             await ctx.send("No image was generated.")
+    
     except Exception as e:
         print(f"An error occurred: {e}")
         await ctx.send("Sorry, something went wrong while generating the image.")
     
-
 # 
 # YTDL 
 # 
